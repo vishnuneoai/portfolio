@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth bg-black text-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vishnu | Cinematic Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base Resets & Typography */
+        :root {
+            --vfx-red: #ff0f39;
+            --vfx-red-glow: rgba(255, 15, 57, 0.5);
+        }
+        
+        * { cursor: none !important; } /* Hide default cursor */
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            background-color: #030303;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        h1, h2, h3, .syncopate { font-family: 'Syncopate', sans-serif; }
+
+        /* Custom Cursor Elements */
+        #cursor-dot {
+            position: fixed;
+            top: 0; left: 0;
+            width: 8px; height: 8px;
+            background-color: var(--vfx-red);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--vfx-red);
+        }
+
+        #cursor-trail {
+            position: fixed;
+            top: 0; left: 0;
+            width: 40px; height: 40px;
+            border: 1px solid var(--vfx-red);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+            background-color: rgba(255, 15, 57, 0.05);
+        }
+
+        /* Hover states for cursor */
+        .hover-target:hover ~ #cursor-trail {
+            width: 60px; height: 60px;
+            background-color: rgba(255, 15, 57, 0.1);
+            border-width: 2px;
+        }
+
+        /* Entry Screen */
+        #entry-screen {
+            position: fixed; inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+
+        .btn-glitch {
+            position: relative;
+            background: transparent;
+            color: var(--vfx-red);
+            border: 1px solid var(--vfx-red);
+            padding: 15px 40px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: bold;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        
+        .btn-glitch:hover {
+            background: var(--vfx-red);
+            color: #000;
+            box-shadow: 0 0 30px var(--vfx-red-glow);
+        }
+
+        /* Glitch Animation */
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+        .glitch-text:hover { animation: glitch 0.2s infinite; color: var(--vfx-red); }
+
+        /* Images & Cards */
+        .cinematic-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: contrast(1.1) saturate(1.1);
+            transition: transform 0.7s ease, filter 0.7s ease;
+        }
+        
+        .img-wrapper {
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .img-wrapper::after {
+            content: '';
+            position: absolute; inset: 0;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        .img-wrapper:hover .cinematic-img {
+            transform: scale(1.05);
+            filter: contrast(1.2) saturate(1.2) brightness(1.1);
+        }
+
+        /* Scroller utility */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-trail"></div>
+
+    <!-- ENTRY SCREEN (Required for Audio Context) -->
+    <div id="entry-screen">
+        <div class="text-center">
+            <h1 class="syncopate text-2xl md:text-4xl mb-8 tracking-widest text-zinc-600">SYSTEM <span class="text-white">LOCKED</span></h1>
+            <button id="enter-btn" class="btn-glitch hover-target syncopate cursor-none">
+                INITIALIZE PORTFOLIO
+            </button>
+            <p class="mt-4 text-xs font-mono text-zinc-500">Audio Experience Included</p>
+        </div>
+    </div>
+
+    <!-- MAIN WRAPPER -->
+    <main id="main-content" class="hidden opacity-0 transition-opacity duration-1000">
+        
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-50 mix-blend-difference">
+            <div class="syncopate font-bold text-xl tracking-widest glitch-text hover-target">VISHNU<span class="text-[#ff0f39]">.</span></div>
+            <div class="flex gap-6 font-mono text-xs tracking-widest uppercase">
+                <a href="#work" class="hover:text-[#ff0f39] transition-colors hover-target">Work</a>
+                <a href="#contact" class="hover:text-[#ff0f39] transition-colors hover-target">Connect</a>
+            </div>
+        </nav>
+
+        <!-- HERO SECTION -->
+        <section class="min-h-screen relative flex items-center pt-20 px-4 md:px-12">
+            <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+                
+                <!-- Left: Text -->
+                <div class="order-2 lg:order-1 fade-up">
+                    <p class="font-mono text-[#ff0f39] mb-4 tracking-[0.2em] uppercase text-sm border-l-2 border-[#ff0f39] pl-3">
+                        Bundi, Rajasthan // Age 18
+                    </p>
+                    <h1 class="syncopate text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.1] mb-6">
+                        VISUAL<br>
+                        <span class="text-transparent" style="-webkit-text-stroke: 1px white;">ARCHITECT</span>
+                    </h1>
+                    <p class="text-zinc-400 max-w-md text-lg mb-8 border-l-2 border-zinc-800 pl-4">
+                        Graphics Designer & Video Editor. 
+                        "Passion for editing, that's where my identity lies." 
+                        Dream big, hustle harder.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4">
+                        <!-- DIRECT INSTAGRAM DM LINK -->
+                        <a href="https://ig.me/m/hindu_vishnu_official" target="_blank" class="btn-glitch hover-target inline-block cursor-none bg-[#ff0f39] text-white border-[#ff0f39]">
+                            HIRE ME (DM)
+                        </a>
+                        <a href="#work" class="btn-glitch hover-target inline-block cursor-none text-zinc-300 border-zinc-700">
+                            VIEW ARSENAL
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right: Featured Image -->
+                <div class="order-1 lg:order-2 flex justify-center fade-up delay-200">
+                    <div class="img-wrapper w-full max-w-[400px] aspect-[4/5] p-2 bg-zinc-900/50 rounded-sm relative group">
+                        <!-- Corner Accents -->
+                        <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#ff0f39]"></div>
+                        <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#ff0f39]"></div>
+                        
+                        <!-- EXPLICIT IMAGE TAG -->
+                        <img src="1000012250.png" alt="Vishnu Hero Profile" class="cinematic-img hover-target">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Background Typography -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 syncopate text-[15vw] text-zinc-900 opacity-20 pointer-events-none select-none -z-10 w-full text-center overflow-hidden whitespace-nowrap">
+                VFX ARTIST
+            </div>
+        </section>
+
+        <!-- CHANNELS & SKILLS MARQUEE -->
+        <div class="border-y border-zinc-900 py-6 bg-[#050505] overflow-hidden whitespace-nowrap flex items-center">
+            <div class="animate-[marquee_20s_linear_infinite] inline-block font-mono tracking-widest text-zinc-500 uppercase text-sm">
+                <span class="mx-8">• MANAGING CHANNEL: DEFU EXD</span>
+                <span class="mx-8">• MANAGING CHANNEL: VIED_EDITZ</span>
+                <span class="mx-8 text-[#ff0f39]">• HIGH RETENTION EDITING</span>
+                <span class="mx-8">• MOTION GRAPHICS</span>
+                <span class="mx-8">• MANAGING CHANNEL: DEFU EXD</span>
+                <span class="mx-8">• MANAGING CHANNEL: VIED_EDITZ</span>
+                <span class="mx-8 text-[#ff0f39]">• HIGH RETENTION EDITING</span>
+                <span class="mx-8">• MOTION GRAPHICS</span>
+            </div>
+        </div>
+
+        <style>
+            @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        </style>
+
+        <!-- GALLERY SECTION -->
+        <section id="work" class="py-32 px-4 md:px-12">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="syncopate text-3xl md:text-5xl mb-12 fade-up">THE <span class="text-[#ff0f39]">ARCHIVE</span></h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Gallery Item 1 -->
+                    <div class="img-wrapper aspect-[3/4] fade-up hover-target">
+                        <div class="absolute top-4 left-4 z-10 bg-black/70 px-3 py-1 text-xs font-mono border border-zinc-700 backdrop-blur-md">01 // LIFESTYLE</div>
+                        <img src="1000010702.png" alt="Vishnu Lifestyle" class="cinematic-img">
+                    </div>
+
+                    <!-- Gallery Item 2 -->
+                    <div class="img-wrapper aspect-[3/4] fade-up delay-100 hover-target">
+                        <div class="absolute top-4 left-4 z-10 bg-black/70 px-3 py-1 text-xs font-mono border border-zinc-700 backdrop-blur-md">02 // STREET</div>
+                        <img src="1000009559.png" alt="Vishnu Masked" class="cinematic-img">
+                    </div>
+
+                    <!-- Gallery Item 3 -->
+                    <div class="img-wrapper aspect-[3/4] fade-up delay-200 hover-target md:col-span-2 lg:col-span-1">
+                        <div class="absolute top-4 left-4 z-10 bg-black/70 px-3 py-1 text-xs font-mono border border-zinc-700 backdrop-blur-md">03 // CREATOR</div>
+                        <img src="1000012652.webp" alt="Vishnu Creator Profile" class="cinematic-img">
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT & QR SECTION -->
+        <section id="contact" class="py-32 px-4 md:px-12 bg-[#020202] border-t border-zinc-900 relative">
+            <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+                
+                <!-- Connect Info -->
+                <div class="flex-1 fade-up">
+                    <h2 class="syncopate text-4xl md:text-6xl mb-6">INITIATE<br><span class="text-transparent" style="-webkit-text-stroke: 1px #ff0f39;">CONTACT</span></h2>
+                    <p class="text-zinc-400 mb-8 font-mono text-sm max-w-md leading-relaxed">
+                        Ready to elevate your visual content? Scan the QR code or hit the button below to drop directly into my Instagram DMs. Let's build something cinematic.
+                    </p>
+                    
+                    <!-- DIRECT DM BUTTON -->
+                    <a href="https://ig.me/m/hindu_vishnu_official" target="_blank" class="btn-glitch hover-target inline-block cursor-none bg-[#ff0f39] text-white w-full md:w-auto text-center">
+                        OPEN INSTAGRAM DM
+                    </a>
+                    
+                    <div class="mt-8 pt-8 border-t border-zinc-800 flex gap-4 text-xs font-mono text-zinc-500">
+                        <span>IG: @hindu_vishnu_official</span>
+                        <span>LOC: BUNDI, RAJASTHAN</span>
+                    </div>
+                </div>
+
+                <!-- QR Code Box -->
+                <div class="w-full md:w-auto flex justify-center fade-up delay-200">
+                    <div class="p-4 bg-zinc-900 border border-zinc-800 rounded-sm hover:border-[#ff0f39] transition-colors group relative hover-target">
+                        <!-- Scanner Line Effect -->
+                        <div class="absolute top-0 left-0 w-full h-1 bg-[#ff0f39] opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-[0_0_15px_#ff0f39]" style="animation: scan 2s linear infinite;"></div>
+                        
+                        <div class="bg-white p-2 w-[250px] aspect-square mx-auto">
+                            <!-- EXPLICIT QR IMAGE -->
+                            <img src="1000013706_2.jpg" alt="Instagram QR Code" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500">
+                        </div>
+                        <div class="text-center mt-4 font-mono text-sm tracking-widest text-[#ff0f39]">SCAN TO CONNECT</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-8 text-center border-t border-zinc-900 font-mono text-xs text-zinc-600">
+            &copy; 2024 VISHNU. ALL SYSTEMS NOMINAL.
+        </footer>
+    </main>
+
+    <style>
+        @keyframes scan { 
+            0% { top: 0%; } 
+            50% { top: 98%; }
+            100% { top: 0%; }
+        }
+    </style>
+
+    <script>
+        /** --- 1. CUSTOM CURSOR LOGIC --- */
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorTrail = document.getElementById('cursor-trail');
+        
+        let mouseX = 0, mouseY = 0;
+        let trailX = 0, trailY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            // Instant dot update
+            cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+            
+            // Smooth trail follow (easing)
+            trailX += (mouseX - trailX) * 0.15;
+            trailY += (mouseY - trailY) * 0.15;
+            cursorTrail.style.transform = `translate(${trailX}px, ${trailY}px)`;
+            
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+
+        /** --- 2. WEB AUDIO API SYNTHESIS (No external files) --- */
+        let audioCtx;
+        let scrollNoiseNode;
+        let scrollGainNode;
+        let isAudioInit = false;
+
+        const enterBtn = document.getElementById('enter-btn');
+        const entryScreen = document.getElementById('entry-screen');
+        const mainContent = document.getElementById('main-content');
+
+        enterBtn.addEventListener('click', () => {
+            // Initialize Audio Context on user gesture
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            isAudioInit = true;
+
+            // Play Unlock Sound
+            playUnlockSequence();
+            
+            // Init Scroll Sound Setup
+            setupScrollSound();
+
+            // Transition UI
+            entryScreen.style.opacity = '0';
+            setTimeout(() => {
+                entryScreen.style.visibility = 'hidden';
+                mainContent.classList.remove('hidden');
+                setTimeout(() => {
+                    mainContent.classList.remove('opacity-0');
+                    initScrollReveal(); // trigger visual reveals
+                }, 100);
+            }, 800);
+        });
+
+        // Synthetic "Unlock/Tech" Beep
+        function playUnlockSequence() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+            osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1); // Slide up
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.02); // Attack
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3); // Decay
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // Dynamic Scroll Sound (White Noise + Lowpass Filter)
+        function setupScrollSound() {
+            if (!audioCtx) return;
+
+            // 1. Generate White Noise Buffer
+            const bufferSize = audioCtx.sampleRate * 2; // 2 seconds of noise loop
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+
+            // 2. Setup Nodes
+            scrollNoiseNode = audioCtx.createBufferSource();
+            scrollNoiseNode.buffer = noiseBuffer;
+            scrollNoiseNode.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 400; // Deep rubbing/whoosh sound
+
+            scrollGainNode = audioCtx.createGain();
+            scrollGainNode.gain.value = 0; // Silent initially
+
+            // 3. Connect: Noise -> Filter -> Gain -> Output
+            scrollNoiseNode.connect(filter);
+            filter.connect(scrollGainNode);
+            scrollGainNode.connect(audioCtx.destination);
+
+            scrollNoiseNode.start();
+        }
+
+        // Calculate scroll speed and map to volume
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+
+        window.addEventListener('scroll', () => {
+            if (!ticking && isAudioInit) {
+                window.requestAnimationFrame(() => {
+                    const currentScrollY = window.scrollY;
+                    const deltaY = Math.abs(currentScrollY - lastScrollY);
+                    
+                    // Map scroll speed to volume (Gain)
+                    // Max speed ~100px per frame -> Max gain ~0.15
+                    let targetVolume = Math.min(deltaY * 0.003, 0.15);
+                    
+                    // Smooth volume transition
+                    scrollGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                    scrollGainNode.gain.linearRampToValueAtTime(targetVolume, audioCtx.currentTime + 0.1);
+                    
+                    // Fade out quickly if scrolling stops
+                    scrollGainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+
+                    lastScrollY = currentScrollY;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+
+        /** --- 3. SCROLL REVEAL (Intersection Observer) --- */
+        function initScrollReveal() {
+            const elements = document.querySelectorAll('.fade-up');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            elements.forEach(el => observer.observe(el));
+        }
+
+        // Add hover triggers for custom cursor styling on links
+        document.querySelectorAll('a, button').forEach(el => {
+            el.classList.add('hover-target');
+        });
+    </script>
+</body>
+</html>
